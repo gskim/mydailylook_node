@@ -1,13 +1,15 @@
 var express = require('express');
 var router = express.Router();
 var mysql = require('mysql');
-
+var config = require('../config.json');
+var moment = require('moment');
+var authenticate = require("authenticate");
 var connection = mysql.createConnection({
-    host    :'localhost',
+    host    :config.db_host,
     port : 3306,
-    user : 'root',
-    password : 'rltjs500529',
-    database:'mydailylook'
+    user : config.db_user,
+    password : config.db_password,
+    database: config.db_schema
 });
 connection.connect(function(err) {
     if (err) {
@@ -16,16 +18,25 @@ connection.connect(function(err) {
         throw err;
     }
 });
-
+moment.locale('ko');
 /* GET users listing. */
-router.get('/', function(req, res) {
-  console.log("users");
-  res.send('respond with a resource');
+router.post('/join' , function(req , res) {
+  
 });
 
+
+
 router.get('/a', function(req, res) {
+  console.log("/aaa");
   var query = connection.query('select * from devices',function(err,rows){
-      console.log(rows);
+      for (var i in rows) {
+        if (rows.hasOwnProperty(i)) {
+          rows[i].access_token = authenticate.serializeToken(config.client_id, rows[i].device_id ,config.extra_data);
+
+          console.log( authenticate.deserializeToken( rows[i].access_token ) );
+        }
+      }
+
       res.json(rows);
   });
 });
@@ -36,10 +47,20 @@ router.get('/b', function(req, res) {
       if (err) {
         console.log(err);
 
+      }else{
+        console.log(rows);
+        for (var i in rows) {
+          if (rows.hasOwnProperty(i)) {
+            console.log(i);
+            console.log(rows[i].visit_time);
+            rows[i].visit_time = moment(rows[i].visit_time).fromNow();
+            console.log( moment(rows[i].visit_time).fromNow() );
+          }
+        }
+        resultObj['data'] = rows;
+        res.send(resultObj);
       }
-      console.log(rows);
-      resultObj['data'] = rows;
-      res.send(resultObj);
+
 
   });
 });

@@ -4,10 +4,16 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var config = require('./config.json');
+
+var authenticate = require("authenticate");
 
 var routes = require('./routes/index');
 var user = require('./routes/users');
 var common = require('./routes/common');
+
+
+
 var app = express();
 
 // view engine setup
@@ -21,6 +27,11 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(authenticate.middleware({
+    encrypt_key: config.encrypt_key, // Add any key for encrypting data
+    validate_key: config.validate_key // Add any key for signing data
+}));
 
 app.use('/', routes);
 app.use('/user', user);
