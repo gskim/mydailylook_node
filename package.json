@@ -18,6 +18,7 @@
     "mysql": "^2.11.1",
     "nodemailer": "^2.5.0",
     "nodemailer-smtp-transport": "^2.6.0",
+    "random-string": "^0.1.2",
     "serve-favicon": "~2.3.0"
   }
 }
