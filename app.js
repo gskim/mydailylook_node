@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var config = require('./config.json');
 
+
 var authenticate = require("authenticate");
 
 var routes = require('./routes/index');
@@ -28,6 +29,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(__dirname + '/uploads'));
 
 app.use(authenticate.middleware({
     encrypt_key: config.encrypt_key, // Add any key for encrypting data
