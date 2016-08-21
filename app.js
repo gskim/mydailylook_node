@@ -11,6 +11,7 @@ var authenticate = require("authenticate");
 var routes = require('./routes/index');
 var user = require('./routes/users');
 var common = require('./routes/common');
+var post = require('./routes/post');
 
 
 
@@ -36,6 +37,7 @@ app.use(authenticate.middleware({
 app.use('/', routes);
 app.use('/user', user);
 app.use('/common' , common);
+app.use('/post' , post);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
