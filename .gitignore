@@ -30,3 +30,6 @@ node_modules
 npm-debug.log
 
 config.json
+
+#uploads
+uploads
