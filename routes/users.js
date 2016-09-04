@@ -42,11 +42,12 @@ router.post('/login' , function(req, res){
   var email = req.body.email;
   var password = req.body.password;
   var loginType = req.body.loginType;
+  var deviceId = req.body.deviceId;
   var access_token = randomString({length: 20}) + Date.now();
   var now = moment().format('YYYY-MM-DD HH:mm:ss');
   var code = 0;
   var nickname = 'unknown';
-  var query = connection.query(' SELECT  nickname , password , email_yn , birth  FROM members WHERE email = ?  ' , email , function(err , result){
+  var query = connection.query(' SELECT id , nickname , password , email_yn , birth  FROM members WHERE email = ?  ' , email , function(err , result){
     if (err) {
       console.err(err);
       throw err;
@@ -78,6 +79,21 @@ router.post('/login' , function(req, res){
       //가입된 회원이 없음
       code = 2;
     }
+    if ( code == 4 || code == 1 || code == 5 ){
+      var deviceData = {
+        access_token : access_token,
+        userno : result[0].id
+      };
+      var deviceQuery = connection.query( ' UPDATE devices SET ? WHERE device_id = ? ' , [deviceData , deviceId] ,function(err , result){
+        if(err){
+          console.err(err);
+          throw err;
+        }
+
+      })
+    }
+
+
     var updateData = {
       login_time : now
     };
@@ -155,7 +171,6 @@ router.post('/join' , function(req , res) {
       console.log(err);
       throw err;
     }
-
     if (result.length > 0) {
       //중복된 이메일
       response.code = 2;
