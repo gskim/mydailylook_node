@@ -117,7 +117,7 @@ router.post('/auto-login' , function(req , res){
   var nickname = 'unknown';
   var access_token = randomString({length: 20}) + Date.now();
   var now = moment().format('YYYY-MM-DD HH:mm:ss');
-  var query = connection.query( ' SELECT userno FROM members WHERE access_token = ? ' , accessToken , function(err , result){
+  var query = connection.query( ' SELECT userno FROM devices WHERE access_token = ? ' , accessToken , function(err , result){
     if (err){
       console.error(err);
       throw err;
