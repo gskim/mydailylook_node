@@ -38,7 +38,110 @@ var mailOptions = {
 
 
 moment.locale('ko');
-/* GET users listing. */
+router.post('/login' , function(req, res){
+  var email = req.body.email;
+  var password = req.body.password;
+  var loginType = req.body.loginType;
+  var access_token = randomString({length: 20}) + Date.now();
+  var now = moment().format('YYYY-MM-DD HH:mm:ss');
+  var code = 0;
+  var nickname = 'unknown';
+  var query = connection.query(' SELECT  nickname , password , email_yn , birth  FROM members WHERE email = ?  ' , email , function(err , result){
+    if (err) {
+      console.err(err);
+      throw err;
+    }
+    console.log(query);
+    if ( result.length > 0 ){
+      //가입된 회원이 있음
+      if ( result[0].password == password ){
+        //비밀번호일치
+        if ( result[0].email_yn == 'y' ){
+          //이메일 인증한 회원
+          if ( result[0].birth == '0000-00-00' ){
+            //프로필 인증을 안한 회원
+            code = 4;
+          }else{
+            // 프로필 인증까지 한 회원
+            code = 1;
+            nickname = result[0].nickname;
+          }
+        }else{
+          //이메일 인증 안한 회원
+          code = 5;
+        }
+      }else{
+        //비밀번호 불일치
+        code = 3;
+      }
+    }else{
+      //가입된 회원이 없음
+      code = 2;
+    }
+    var updateData = {
+      login_time : now
+    };
+    var updateQuery = connection.query(' UPDATE members SET ? WHERE email = ?  ' , [updateData , email] , function(err , result){
+      if (err){
+        console.err(err);
+        throw err;
+      }
+      res.json({
+        code : code,
+        nickname : nickname,
+        accessToken : access_token
+      });
+    });
+  });
+});
+router.post('/auto-login' , function(req , res){
+  var accessToken = req.body.accessToken;
+  var deviceId = req.body.deviceId;
+  var code = 0;
+  var nickname = 'unknown';
+  var access_token = randomString({length: 20}) + Date.now();
+  var now = moment().format('YYYY-MM-DD HH:mm:ss');
+  var query = connection.query( ' SELECT userno FROM members WHERE access_token = ? ' , accessToken , function(err , result){
+    if (err){
+      console.err(err);
+      throw err;
+    }
+    if (result.length > 0 ){
+      var memberQuery = connection.query( ' SELECT nickname , email_yn , birth FROM members WHERE id = ? ' , result[0].userno , function(err , result){
+        if(err){
+          console.err(err);
+          throw err;
+        }
+        if (result.length > 0){
+          if( result[0].email_yn == 'n' ){
+            code = 5;
+          }else{
+            if(result[0].birth == '0000-00-00' ){
+              code = 4;
+            }else{
+              code = 1;
+              nickname = result[0].nickname;
+            }
+          }
+        }else{
+          code = 2;
+        }
+      });
+    }else{
+      // access_token 일치하는게 없음
+      code = 6
+    }
+    res.json({
+      code :code ,
+      nickname : nickname,
+      accessToken : access_token
+    });
+  });
+});
+
+
+
+
 router.post('/join' , function(req , res) {
   var email = req.body.email;
   var password = req.body.password;
@@ -87,7 +190,7 @@ router.post('/join' , function(req , res) {
               to: data.email,
               subject: '마이데일리룩 가입을 환영합니다. ', // Subject line
               text: '안녕하세요 ', // plaintext body
-              html: '<b>클릭하시면 인증이 완료됩니다.</b> <a href="mydailylook.net" > 인증하기 </a>' + email_token // html body
+              html: '<b>클릭하시면 인증이 완료됩니다.</b> <a href="http://www.mydailylook.net:3000/user/auth?id='+email_token+'" > 인증하기 </a>' // html body
             } , function(error , info){
               if (error){
                 console.log(error);
@@ -107,6 +210,22 @@ router.post('/join' , function(req , res) {
     }
   });
 });
+router.get('/auth' , function(req , res){
+  var email_token = req.query.id;
+  var query = connection.query(" SELECT id FROM members WHERE email_token =  ? " , email_token , function(err , result){
+    if (err){
+      console.err(err);
+      throw err;
+    }
+    if ( result.length > 0 ){
+      res.render('authok', { title: 'mydailylook' });
+    }else{
+      res.render('authfail', { title: 'mydailylook' });
+    }
+  });
+});
+
+
 function duplicationCheck(email) {
   var query = connection.query(' SELECT id FROM members WHERE email = ? ', email , function(err , result){
     if (err) {
@@ -155,8 +274,6 @@ router.get('/b', function(req, res) {
         resultObj['data'] = rows;
         res.send(resultObj);
       }
-
-
   });
 });
 
