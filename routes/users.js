@@ -115,6 +115,7 @@ router.post('/auto-login' , function(req , res){
   var deviceId = req.body.deviceId;
   var code = 0;
   var nickname = 'unknown';
+  console.log('deviceId : ' + deviceId);
   var access_token = randomString({length: 20}) + Date.now();
   var now = moment().format('YYYY-MM-DD HH:mm:ss');
   var query = connection.query( ' SELECT userno FROM devices WHERE access_token = ? ' , accessToken , function(err , result){
@@ -123,20 +124,22 @@ router.post('/auto-login' , function(req , res){
       throw err;
     }
     if (result.length > 0 ){
-      var memberQuery = connection.query( ' SELECT nickname , email_yn , birth FROM members WHERE id = ? ' , result[0].userno , function(err , result){
+    	console.log('length > 0');
+      var memberQuery = connection.query( ' SELECT nickname , email_yn , birth FROM members WHERE id = ? ' , result[0].userno , function(err , result2){
         if(err){
           console.error(err);
           throw err;
         }
-        if (result.length > 0){
-          if( result[0].email_yn == 'n' ){
+        if (result2.length > 0){
+        	console.log('length > 0  2');
+          if( result2[0].email_yn == 'n' ){
             code = 5;
           }else{
-            if(result[0].birth == '0000-00-00' ){
+            if(result2[0].birth == '0000-00-00' ){
               code = 4;
             }else{
               code = 1;
-              nickname = result[0].nickname;
+              nickname = result2[0].nickname;
             }
           }
         }else{
@@ -147,6 +150,8 @@ router.post('/auto-login' , function(req , res){
       // access_token 일치하는게 없음
       code = 6
     }
+    console.log('code : ' + code);
+    console.log('nickname : ' + nickname);
     res.json({
       code :code ,
       nickname : nickname,
@@ -164,7 +169,7 @@ router.post('/join' , function(req , res) {
   var loginType = req.body.loginType;
   var deviceId = req.body.deviceId;
   var response = {};
-  console.log(deviceId);
+  console.log('deviceId : ' + deviceId);
   var dupQuery = connection.query(' SELECT id FROM members WHERE email = ? ', email , function(err , result){
     if (err) {
       console.log(err);

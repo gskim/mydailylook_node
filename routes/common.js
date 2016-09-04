@@ -27,7 +27,7 @@ router.post('/gate',function(req,res){
     var osType = req.body.osType;
     var osVersion = req.body.osVersion;
     var code = 0;
-    console.log(deviceId);
+    console.log('deviceId : ' + deviceId);
     //var now = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
     var now = moment().format('YYYY-MM-DD HH:mm:ss');
 
