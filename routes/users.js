@@ -233,7 +233,15 @@ router.get('/auth' , function(req , res){
       throw err;
     }
     if ( result.length > 0 ){
-      res.render('authok', { title: 'mydailylook' });
+
+      var updateQuery = connection.query(" UPDATE members SET email_yn = 'y' WHERE email_token = ? " , email_token , function(err , result){
+        if(err){
+          consloe.error(err);
+          throw err;
+        }else{
+          res.render('authok', { title: 'mydailylook' });
+        }
+      });
     }else{
       res.render('authfail', { title: 'mydailylook' });
     }
