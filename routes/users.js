@@ -49,7 +49,7 @@ router.post('/login' , function(req, res){
   var nickname = 'unknown';
   var query = connection.query(' SELECT id , nickname , password , email_yn , birth  FROM members WHERE email = ?  ' , email , function(err , result){
     if (err) {
-      console.err(err);
+      console.error(err);
       throw err;
     }
     console.log(query);
@@ -86,7 +86,7 @@ router.post('/login' , function(req, res){
       };
       var deviceQuery = connection.query( ' UPDATE devices SET ? WHERE device_id = ? ' , [deviceData , deviceId] ,function(err , result){
         if(err){
-          console.err(err);
+          console.error(err);
           throw err;
         }
 
@@ -99,7 +99,7 @@ router.post('/login' , function(req, res){
     };
     var updateQuery = connection.query(' UPDATE members SET ? WHERE email = ?  ' , [updateData , email] , function(err , result){
       if (err){
-        console.err(err);
+        console.error(err);
         throw err;
       }
       res.json({
@@ -119,13 +119,13 @@ router.post('/auto-login' , function(req , res){
   var now = moment().format('YYYY-MM-DD HH:mm:ss');
   var query = connection.query( ' SELECT userno FROM members WHERE access_token = ? ' , accessToken , function(err , result){
     if (err){
-      console.err(err);
+      console.error(err);
       throw err;
     }
     if (result.length > 0 ){
       var memberQuery = connection.query( ' SELECT nickname , email_yn , birth FROM members WHERE id = ? ' , result[0].userno , function(err , result){
         if(err){
-          console.err(err);
+          console.error(err);
           throw err;
         }
         if (result.length > 0){
@@ -229,7 +229,7 @@ router.get('/auth' , function(req , res){
   var email_token = req.query.id;
   var query = connection.query(" SELECT id FROM members WHERE email_token =  ? " , email_token , function(err , result){
     if (err){
-      console.err(err);
+      console.error(err);
       throw err;
     }
     if ( result.length > 0 ){
