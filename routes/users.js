@@ -47,12 +47,12 @@ router.post('/login' , function(req, res){
   var now = moment().format('YYYY-MM-DD HH:mm:ss');
   var code = 0;
   var nickname = 'unknown';
+  console.log(deviceId);
   var query = connection.query(' SELECT id , nickname , password , email_yn , birth  FROM members WHERE email = ?  ' , email , function(err , result){
     if (err) {
       console.error(err);
       throw err;
     }
-    console.log(query);
     if ( result.length > 0 ){
       //가입된 회원이 있음
       if ( result[0].password == password ){
@@ -164,8 +164,7 @@ router.post('/join' , function(req , res) {
   var loginType = req.body.loginType;
   var deviceId = req.body.deviceId;
   var response = {};
-  //var isDuplicated = duplicationCheck(email);
-  //console.log(isDuplicated);
+  console.log(deviceId);
   var dupQuery = connection.query(' SELECT id FROM members WHERE email = ? ', email , function(err , result){
     if (err) {
       console.log(err);
@@ -191,8 +190,6 @@ router.post('/join' , function(req , res) {
                     };
         var query = connection.query('INSERT INTO members SET ?', data, function(err, result) {
           if (err) throw err;
-          console.log(query);
-          console.log(result);
           var access_token = randomString({length: 20}) + Date.now();
           var updateData = {
             access_token : access_token,

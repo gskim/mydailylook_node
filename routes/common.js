@@ -27,6 +27,7 @@ router.post('/gate',function(req,res){
     var osType = req.body.osType;
     var osVersion = req.body.osVersion;
     var code = 0;
+    console.log(deviceId);
     //var now = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
     var now = moment().format('YYYY-MM-DD HH:mm:ss');
 
@@ -72,14 +73,12 @@ router.post('/gate',function(req,res){
                 console.error(err);
                 throw err;
             }
-            console.log(result);
             var response = {
                             'code':code,
                             'eventUrl' : config.eventUrl,
                             'appVersion' : version,
                             'isForce' : config.isForce
             };
-            console.log(response);
             res.send(response);
         });
       }
