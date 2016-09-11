@@ -118,14 +118,9 @@ router.post('/auto-login' , function(req , res){
   console.log('deviceId : ' + deviceId);
   var access_token = randomString({length: 20}) + Date.now();
   var now = moment().format('YYYY-MM-DD HH:mm:ss');
-  var query = connection.query( ' SELECT userno FROM devices WHERE access_token = ? ' , accessToken , function(err , result){
-    if (err){
-      console.error(err);
-      throw err;
-    }
-    if (result.length > 0 ){
-    	console.log('length > 0');
-      var memberQuery = connection.query( ' SELECT nickname , email_yn , birth FROM members WHERE id = ? ' , result[0].userno , function(err , result2){
+      var memberQuery = connection.query( ' SELECT nickname , email_yn , birth FROM members WHERE id = ( SELECT userno FROM devices WHERE access_token = ? ) '
+       , accessToken
+       , function(err , result2){
         if(err){
           console.error(err);
           throw err;
@@ -157,7 +152,7 @@ router.post('/auto-login' , function(req , res){
       nickname : nickname,
       accessToken : access_token
     });
-  });
+
 });
 
 
