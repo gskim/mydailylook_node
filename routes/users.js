@@ -81,8 +81,7 @@ router.post('/login' , function(req, res){
     }
     if ( code == 4 || code == 1 || code == 5 ){
       var deviceData = {
-        access_token : access_token,
-        userno : result[0].id
+        access_token : access_token
       };
       var deviceQuery = connection.query( ' UPDATE devices SET ? WHERE device_id = ? ' , [deviceData , deviceId] ,function(err , result){
         if(err){
@@ -118,7 +117,7 @@ router.post('/auto-login' , function(req , res){
   console.log('deviceId : ' + deviceId);
   var access_token = randomString({length: 20}) + Date.now();
   var now = moment().format('YYYY-MM-DD HH:mm:ss');
-      var memberQuery = connection.query( ' SELECT nickname , email_yn , birth FROM members WHERE id = ( SELECT userno FROM devices WHERE access_token = ? ) '
+      var memberQuery = connection.query( ' SELECT nickname , email_yn , birth FROM members WHERE id = ( SELECT userno FROM devices WHERE access_token = ? limit 1 ) '
        , accessToken
        , function(err , result2){
         if(err){
@@ -140,18 +139,29 @@ router.post('/auto-login' , function(req , res){
         }else{
           code = 2;
         }
+        var deviceData = {
+		        access_token : access_token
+		      };
+      var deviceQuery = connection.query( ' UPDATE devices SET ? WHERE device_id = ? ' , [deviceData , deviceId] ,function(err , result){
+        if(err){
+          console.error(err);
+          throw err;
+        }
+
       });
-    }else{
-      // access_token 일치하는게 없음
-      code = 6
-    }
+      
+    
     console.log('code : ' + code);
     console.log('nickname : ' + nickname);
+    console.log('accesstoken : ' + accessToken );
+    console.log('newaccesstoken : ' + access_token );
     res.json({
       code :code ,
       nickname : nickname,
       accessToken : access_token
     });
+  });
+	  
 
 });
 
@@ -186,7 +196,8 @@ router.post('/join' , function(req , res) {
                       regdate : now,
                       login_time : now,
                       login_type : loginType,
-                      email_token : email_token
+                      email_token : email_token,
+                      nickname : deviceId
                     };
         var query = connection.query('INSERT INTO members SET ?', data, function(err, result) {
           if (err) throw err;
@@ -259,42 +270,55 @@ function duplicationCheck(email) {
   });
 }
 
-
-router.get('/a', function(req, res) {
-  console.log("/aaa");
-  var query = connection.query('select * from devices',function(err,rows){
-      for (var i in rows) {
-        if (rows.hasOwnProperty(i)) {
-          rows[i].access_token = authenticate.serializeToken(config.client_id, rows[i].device_id ,config.extra_data);
-
-          console.log( authenticate.deserializeToken( rows[i].access_token ) );
-        }
-      }
-
-      res.json(rows);
-  });
+router.post('/profile' , function(req,res){
+	var accessToken = req.body.accessToken;
+	var type = req.body.type;
+	var nickname = req.body.nickname;
+	var birth = req.body.birth;
+	var gender = req.body.gender;
+	var height_max = req.body.height_max;
+	var height_min = req.body.height_min;
+	var weight_max = req.body.weight_max;
+	var weight_min = req.body.weight_min;
+	var foot_max = req.body.foot_max;
+	var foot_min = req.body.foot_min;
+	var height_permission = req.body.height_permission;
+	var weight_permission = req.body.weight_permission;
+	var foot_permission = req.body.foot_permission;
+	console.log(accessToken);
+	var description = req.body.description;
+	var code = 2;
+	console.log(type);
+	var updateData = {
+	        height_max : height_max,
+	        height_min : height_min,
+	        weight_max : weight_max,
+	        weight_min : weight_min,
+	        foot_max : foot_max,
+	        foot_min : foot_min,
+	        height_permission : height_permission,
+	        weight_permission : weight_permission,
+	        foot_permission : foot_permission
+	      };
+	console.log(updateData);
+	if  ( type == 'new' ){
+		updateData.nickname = nickname;
+		updateData.birth = birth;
+		updateData.gender = gender;
+	}
+	console.log(updateData);
+	var query = connection.query(' UPDATE members SET ? WHERE id = ( SELECT userno FROM devices WHERE access_token = ? limit 1 ) ' , [updateData , accessToken] ,function(err , result){
+		if(err){
+			console.log(err)
+			throw err;
+		}else{
+			code = 1;
+		}
+		res.json({
+			code : code
+		});
+	});
 });
-router.get('/b', function(req, res) {
-  var resultObj = new Object();
-  resultObj['code'] = 1;
-  var query = connection.query('select * from devices',function(err,rows){
-      if (err) {
-        console.log(err);
 
-      }else{
-        console.log(rows);
-        for (var i in rows) {
-          if (rows.hasOwnProperty(i)) {
-            console.log(i);
-            console.log(rows[i].visit_time);
-            rows[i].visit_time = moment(rows[i].visit_time).fromNow();
-            console.log( moment(rows[i].visit_time).fromNow() );
-          }
-        }
-        resultObj['data'] = rows;
-        res.send(resultObj);
-      }
-  });
-});
 
 module.exports = router;

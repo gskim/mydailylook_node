@@ -85,4 +85,21 @@ router.post('/gate',function(req,res){
     });
 });
 
+router.get('/test' , function(req,res){
+	  var query = connection.query(" select id from members where email = 'iphone1987@naver.com' " , function(err,result){
+	    if(err){
+	        console.log(err);
+	    }
+	    var id = result[0].id;
+	    console.log(id);
+	    var selectQ = connection.query(" select userno from device where userno = ? " , id , function(err,result2){
+	      console.log(result2.userno);
+	      id = result2[0].userno;
+	      res.json(result2);
+	    })
+	    
+	    
+	  })
+	})
+
 module.exports = router;
