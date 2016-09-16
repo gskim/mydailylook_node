@@ -5,21 +5,6 @@ var config = require('../config.json');
 var moment = require('moment');
 var version = config.appVersion;
 var multer = require('multer');
-//var storage = multer.diskStorage({
-//  // 서버에 저장할 폴더
-//  destination: function (req, file, cb) {
-//    cb(null, 'uploads/' + moment().format('YYYYMMDD') + '/');
-//  },
-//  // 서버에 저장할 파일 명
-//  filename: function (req, file, cb) {
-//    file.uploadedFile = {
-//      name: Date.now(),
-//      ext: file.mimetype.split('/')[1]
-//    };
-//    cb(null, file.uploadedFile.name + '.' + file.uploadedFile.ext);
-//  }
-//});
-//var upload = multer({ storage: storage }).array('file' , 3);
 var storage = multer.diskStorage({
     // 서버에 저장할 폴더
     destination: function (req, file, cb) {
@@ -46,7 +31,6 @@ var upload = multer({ storage: storage }).fields([
                                                   { name: 'file3', maxCount: 1 },
                                                   { name: 'file4', maxCount: 1 }
                                                 ]);
-//var upload = multer({ storage: storage }).array('file' , 3);
 
 var easyimg = require('easyimage');
 
@@ -121,10 +105,10 @@ router.post('/posting'   , function( req ,res ){
 //                nickname : deviceId
 //              };
 //		var query = connection.query(' INSERT INTO posts SET ? ' , data , function(err , result){
-//			
+//
 //		});
 	})
-	
+
   res.json({
 	  code : 1
   });
