@@ -6,10 +6,11 @@ var moment = require('moment');
 var version = config.appVersion;
 var multer = require('multer');
 var Promise = require('promise');
+var fs = require('fs');
 var storage = multer.diskStorage({
     // 서버에 저장할 폴더
     destination: function (req, file, cb) {
-      var fs = require('fs');
+      
       var dir = 'uploads/' + moment().format('YYYYMMDD') + '/';
 
       if (!fs.existsSync(dir)){
@@ -21,18 +22,17 @@ var storage = multer.diskStorage({
     filename: function (req, file, cb) {
       file.uploadedFile = {
         name: Date.now(),
-        ext: file.mimetype.split('/')[1]
+        ext: file.originalname.split('.')[1]
       };
       cb(null, file.uploadedFile.name + '.' + file.uploadedFile.ext);
     }
   });
-//var upload = multer({ storage: storage }).fields([
-//                                                  { name: 'file1', maxCount: 1 },
-//                                                  { name: 'file2', maxCount: 1 },
-//                                                  { name: 'file3', maxCount: 1 },
-//                                                  { name: 'file4', maxCount: 1 }
-//                                                ]);
-var upload = multer({storage : storage}).single('file1');
+var upload = multer({ storage: storage }).fields([
+                                                  { name: 'file1', maxCount: 1 },
+                                                  { name: 'file2', maxCount: 1 },
+                                                  { name: 'file3', maxCount: 1 },
+                                                  { name: 'file4', maxCount: 1 }
+                                                ]);
 
 var easyimg = require('easyimage');
 
@@ -81,51 +81,7 @@ router.get('/resizing' , function(req , res){
 );
   res.json('');
 });
-var multiparty = require('multiparty');
-var fs = require('fs');
-//router.post('/posting'   , function( req ,res ){
-//	var form = new multiparty.Form();
-//    
-//    // get field name & value
-//    form.on('field',function(name,value){
-//         console.log('normal field / name = '+name+' , value = '+value);
-//    });
-//    
-// // file upload handling
-//    form.on('part',function(part){
-//         var filename;
-//         var size;
-//         if (part.filename) {
-//               filename = part.filename;
-//               size = part.byteCount;
-//         }else{
-//               part.resume();
-//        
-//         }    
-//         console.log(part);
-//         console.log("Write Streaming file :"+filename);
-//         var writeStream = fs.createWriteStream('uploads/' + moment().format('YYYYMMDD') + '/'+filename);
-//         writeStream.filename = filename;
-//         part.pipe(writeStream);
-//
-//         part.on('data',function(chunk){
-//               console.log(filename+' read '+chunk.length + 'bytes');
-//         });
-//        
-//         part.on('end',function(){
-//               console.log(filename+' Part read complete');
-//               writeStream.end();
-//         });
-//    });
-//    
-//    form.on('close',function(){
-//    	res.json({
-//  		  code : 1
-//  	  });
-//   });
-//    form.parse(req);
-//	  
-//	});
+
 router.post('/posting'   , function( req ,res ){
   var accessToken = req.body.accessToken;
 	var content = req.body.contents;
@@ -136,18 +92,27 @@ router.post('/posting'   , function( req ,res ){
 	var promise = new Promise(function(resolved , rejected){
 		upload(req , res , function(err){
 			if (err) rejected(err);
-			
 			resolved(req);
 		})
 	}).catch(function(err){
 		console.log('err : ' + err);
 	}).then(function(req){
+		console.log(req.body);
 		console.log(req.body.tag);
-		console.log(req.file);
+		console.log(req.files);
+		res.json({
+			  code : 1
+		  });
 	});
-  res.json({
-	  code : 1
-  });
+  
+});
+router.get('/image',function(req,res){
+	var id = req.query.id;
+	
+	var img = fs.readFileSync(__dirname + '/..//uploads/20160918/1474187212777.jpg');
+    res.writeHead(200, {'Content-Type': 'image/jpg' });
+    res.end(img);
+	
 });
 
 
