@@ -2,15 +2,15 @@ var express = require('express');
 var router = express.Router();
 var mysql = require('mysql');
 var config = require('../config.json');
+var connection = require('../db.js');
 var moment = require('moment');
-var version = config.appVersion;
 var multer = require('multer');
 var Promise = require('promise');
 var fs = require('fs');
 var storage = multer.diskStorage({
     // 서버에 저장할 폴더
     destination: function (req, file, cb) {
-      
+
       var dir = 'uploads/' + moment().format('YYYYMMDD') + '/';
 
       if (!fs.existsSync(dir)){
@@ -35,24 +35,6 @@ var upload = multer({ storage: storage }).fields([
                                                 ]);
 
 var easyimg = require('easyimage');
-
-var connection = mysql.createConnection({
-    host    :config.db_host,
-    port : 3306,
-    user : config.db_user,
-    password : config.db_password,
-    database: config.db_schema
-});
-connection.connect(function(err) {
-    if (err) {
-        console.error('mysql connection error');
-        console.error(err);
-        throw err;
-    }
-});
-
-
-
 router.get('/resizing' , function(req , res){
   easyimg.info('uploads/20160822/1471792947568.jpeg').then(
     function(file) {
@@ -84,11 +66,15 @@ router.get('/resizing' , function(req , res){
 
 router.post('/posting'   , function( req ,res ){
   var accessToken = req.body.accessToken;
+  var deviceId = req.body.deviceId;
 	var content = req.body.contents;
 	var tag = req.body.tag;
 	var permission = req.body.permission;
 	var place_name = req.body.place_name;
 	var place_position = req.body.place_position;
+  var files;
+  var now = moment().format('YYYY-MM-DD HH:mm:ss');
+  var userno;
 	var promise = new Promise(function(resolved , rejected){
 		upload(req , res , function(err){
 			if (err) rejected(err);
@@ -96,23 +82,65 @@ router.post('/posting'   , function( req ,res ){
 		})
 	}).catch(function(err){
 		console.log('err : ' + err);
+    res.json({
+      code : 2
+    });
 	}).then(function(req){
 		console.log(req.body);
 		console.log(req.body.tag);
 		console.log(req.files);
-		res.json({
-			  code : 1
-		  });
-	});
-  
+    files = req.files;
+    return new Promise(function(resolved , rejected){
+      connection.query( ' SELECT * FROM devices WHERE access_token = ? AND device_id = ? ' , [ accessToken , deviceId ] , function(err , result){
+        if(err) rejected(err);
+        if ( result.length > 0 ){
+          resolved(result[0]);
+        }else{
+          rejected(0);
+        }
+      })
+    });
+	}).then(function(result){
+    var data = {
+      userno : result.userno,
+      content : content,
+      tag : tag,
+      permission : permission,
+      place_name : place_name,
+      place_position : place_position,
+      regdate : now
+    }
+    userno = result.userno;
+    return new Promise(function(resolved , rejected){
+      connection.query( ' INSERT INTO posts = ? ' , data , function(err , result){
+        if(err) rejected(err);
+        resolved(result);
+      });
+    })
+  }).then(function(result){
+    var data = {
+      user_id : userno,
+      post_id : result.insertId,
+
+    }
+    return 1;
+  }).catch(err){
+    console.log(err);
+  }.then(function(result){
+    res.json({
+      code : 3
+    })
+  });
+
 });
+
 router.get('/image',function(req,res){
 	var id = req.query.id;
-	
+
 	var img = fs.readFileSync(__dirname + '/..//uploads/20160918/1474187212777.jpg');
     res.writeHead(200, {'Content-Type': 'image/jpg' });
     res.end(img);
-	
+
 });
 
 
